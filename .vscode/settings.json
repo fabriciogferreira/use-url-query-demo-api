@@ -1,0 +1,7 @@
+{
+  "phpstan.dockerContainerName": "vid2agent-code-php-fpm",
+  "phpstan.paths": {
+    "${workspaceFolder}": "/var/www",
+  },
+  "php-cs-fixer.executablePath": "${workspaceFolder}/.vscode/php-cs-fixer",
+}

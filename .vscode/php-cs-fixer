@@ -1,0 +1,56 @@
+# GAMB TECH TO WORK PHP-CS-FIXER EXTENSION
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+CONTAINER="vid2agent-code-php-fpm"
+HOST_WORKSPACE="/home/fabricio/git/vid2agent-code/vid2agent-code"
+CONTAINER_WORKSPACE="/var/www"
+
+args=()
+TEMP_HOST=""
+TEMP_CONTAINER=""
+
+for arg in "$@"; do
+
+    # Config
+    if [[ "$arg" == --config=* ]]; then
+        config="${arg#--config=}"
+        config="${config//$HOST_WORKSPACE/$CONTAINER_WORKSPACE}"
+        args+=("--config=$config")
+        continue
+    fi
+
+    # Arquivo temporário criado pela extensão no host
+    if [[ "$arg" == /tmp/pcf-tmp* ]]; then
+        TEMP_HOST="$arg"
+        filename="${arg##*/}"
+
+        # Usamos uma área compartilhada pelo container.
+        TEMP_CONTAINER="$CONTAINER_WORKSPACE/.vscode/php-cs-fixer-tmp/$filename"
+
+        mkdir -p "$HOST_WORKSPACE/.vscode/php-cs-fixer-tmp"
+
+        # Copia o arquivo temporário do host para a área compartilhada.
+        cp "$TEMP_HOST" "$HOST_WORKSPACE/.vscode/php-cs-fixer-tmp/$filename"
+
+        args+=("$TEMP_CONTAINER")
+        continue
+    fi
+
+    args+=("$arg")
+done
+
+# Executa o PHP CS Fixer dentro do container.
+docker container exec -i \
+    "$CONTAINER" \
+    /var/www/vendor/bin/php-cs-fixer \
+    "${args[@]}"
+
+# Copia o arquivo formatado de volta para o temporário original
+# que a extensão está esperando.
+if [[ -n "$TEMP_HOST" ]]; then
+    cp \
+        "$HOST_WORKSPACE/.vscode/php-cs-fixer-tmp/$filename" \
+        "$TEMP_HOST"
+fi
