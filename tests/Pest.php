@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /*
@@ -13,10 +12,25 @@ use Tests\TestCase;
 | need to change it using the "pest()" function to bind different classes or traits.
 |
 */
+/*
+| in() must receive absolute paths (__DIR__ . '/...'). Relative names like
+| 'Feature' are resolved from Pest's Backtrace::testFile(), not from this file.
+| The Laravel LSP require()s Pest.php from its own helper template, so that
+| backtrace points at the LSP script and in('Feature') globs the wrong folder.
+| The generated storage/framework/testing/_pest.php then types $this as
+| PHPUnit\Framework\TestCase and autocomplete disappears inside test closures.
+*/
 
 pest()->extend(TestCase::class)
- // ->use(RefreshDatabase::class)
-  ->in('Feature');
+  // ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+  ->in(
+    __DIR__.'/Architecture',
+    __DIR__.'/Exception',
+    __DIR__.'/Feature',
+    __DIR__.'/Policy',
+    __DIR__.'/Request',
+    __DIR__.'/Service',
+  );
 
 /*
 |--------------------------------------------------------------------------
@@ -32,18 +46,3 @@ pest()->extend(TestCase::class)
 expect()->extend('toBeOne', function () {
   return $this->toBe(1);
 });
-
-/*
-|--------------------------------------------------------------------------
-| Functions
-|--------------------------------------------------------------------------
-|
-| While Pest is very powerful out-of-the-box, you may have some testing code specific to your
-| project that you don't want to repeat in every file. Here you can also expose helpers as
-| global functions to help you to reduce the number of lines of code in your test files.
-|
-*/
-
-function something(): void {
-  // ..
-}
