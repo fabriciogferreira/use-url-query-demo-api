@@ -23,6 +23,10 @@ Example: `app/Http/Requests/Order/OrderStoreRequest.php`
 
 Every Form Request must extend `App\Http\Requests\Common\BaseRequest`.
 
+## `rules()` PHPDoc
+
+Do not redeclare the `rules()` PHPDoc on concrete Form Requests. The return shape is already documented on `BaseRequest`; repeating it only adds noise.
+
 ## Enum `in:` rules
 
 When using `in:` validation rules with enum values, use the enum's `toInValidation()` method instead of listing the values.

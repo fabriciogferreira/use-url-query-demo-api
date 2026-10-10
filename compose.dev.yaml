@@ -82,8 +82,8 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     environment:
-      - POSTGRES_DB=app
-      - POSTGRES_USER=laravel
+      - POSTGRES_DB=boilerplate-laravel
+      - POSTGRES_USER=root
       - POSTGRES_PASSWORD=secret
     volumes:
       # Postgres 18+ uses /var/lib/postgresql (without the /data suffix)
@@ -91,7 +91,7 @@ services:
     networks:
       - laravel-development
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U laravel -d app']
+      test: ['CMD-SHELL', 'pg_isready -U root -d boilerplate-laravel']
       interval: 2s
       timeout: 5s
       retries: 30

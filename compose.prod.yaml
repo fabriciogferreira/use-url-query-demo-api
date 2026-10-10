@@ -67,8 +67,8 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     environment:
-      - POSTGRES_DB=${POSTGRES_DATABASE:-app}
-      - POSTGRES_USER=${POSTGRES_USERNAME:-laravel}
+      - POSTGRES_DB=${POSTGRES_DATABASE:-boilerplate-laravel}
+      - POSTGRES_USER=${POSTGRES_USERNAME:-root}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-secret}
     volumes:
       # Postgres 18+ uses /var/lib/postgresql (without the /data suffix)
