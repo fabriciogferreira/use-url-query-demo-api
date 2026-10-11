@@ -31,9 +31,10 @@ For Feature `describe` order and Validation coverage, follow `.ai/rules/feature.
 - Tests must verify behavior rather than implementation details whenever possible.
 - Prefer testing observable outcomes over verifying internal method calls.
 - Feature tests verify the HTTP contract: authentication, status, response body, and persisted state. Do not mock Policy, Form Request, or Service at this boundary.
+- When a write can fail mid-way, tests must assert rollback of prior work from that request (no partial persistence or surviving side effects). See `.ai/rules/feature.md`.
 - Policy tests own the authorization matrix. Feature Validation owns the HTTP validation matrix (see `.ai/rules/feature.md`). Request tests may still assert the Form Request in isolation; do not skip Feature cases because a Request test exists.
 - Instance Feature tests (show, update, destroy) must call `assertAuthorizationRequired`. Update and destroy must also call `assertAuthorizationRunsBeforeValidation` with one invalid payload so a non-owner receives 403, not 422.
-- Service tests verify the behavior of the Service under test. When one Service calls another, test the called Service in its own tests. In the calling Service's tests, verify the delegation only when that interaction is part of the calling Service's contract.
+- Service tests verify the behavior of the Service under test. When one Service calls another, test the called Service in its own tests. In the calling Service's tests, verify the delegation only when that interaction is part of the calling Service's contract. Multi-step writes that can fail mid-way must assert the same rollback of prior work as Feature Behavior.
 - Isolated tests may verify interactions with dependencies when the interaction itself is part of the unit's contract.
 - Do not duplicate the same behavioral test across multiple layers unless each layer provides a distinct contract that needs independent verification.
 - Architecture tests enforce directory conventions. They are not behavioral tests.
