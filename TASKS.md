@@ -53,3 +53,47 @@ Morphs do Laravel (`morphTo` / `morphMany`) já persistem `*_type` como `Model::
 - **duplicar conceitos** (mapa morph vs registry) se os dois resolverem “nome → model” de jeitos diferentes.
 
 Antes de integrar com morphs: decidir uma fonte de verdade (morph map da app **ou** `tables`), ou isolar o registry só para o contrato front↔back e **não** reutilizar `tables.id` / `tables.class` como `*_type` polimórfico sem desenho explícito.
+
+## Validação — nomes de campos em pt_BR
+
+- [ ] **Verificar `lang/pt_br/validation.php` (ou `langs/pt_br/validation.php`)** — parece haver algo pronto (ex. array `attributes`) para traduzir nomes de campos/colunas nas mensagens de validação. Confirmar o path real no projeto e o mecanismo (Laravel `attributes` vs pacote de lang).
+- [ ] **Testar com mais colunas** — adicionar nomes de colunas de outras tabelas nesse arquivo e validar na API que a mensagem 422 usa o label traduzido (não o nome cru do atributo).
+
+## Morphs — uso, cascade e testes
+
+Problema: relacionamento polimórfico do Eloquent, por si só, **não** verifica se o registro alvo ainda está sendo referenciado. Falta API da app para checar uso e para definir o que acontece no delete (soft vs force, cascade), coberta por testes.
+
+Tipos a cobrir (`Illuminate\Database\Eloquent\Relations\*`):
+
+| Relação | Notas / comportamento desejado |
+| --- | --- |
+| `MorphTo` | _(preencher ao implementar)_ |
+| `MorphOne` | _(preencher ao implementar)_ |
+| `MorphMany` | _(preencher ao implementar)_ |
+| `MorphToMany` | Ex.: `User` N—`musicalGenreable`—N `MusicalGenre` e `Event` N—`musicalGenreable`—N `MusicalGenre`. Se `User` tem soft delete → soft-delete do vínculo/`MusicalGenre` conforme regra; se `Event` não tem soft delete → delete “duro” do vínculo/`MusicalGenre` conforme regra. |
+
+### Tarefas
+
+- [ ] **Métodos de checagem de uso** — helpers/traits que respondem se um model (ex. `MusicalGenre`) ainda é referenciado por algum morph (`MorphTo` / `MorphOne` / `MorphMany` / `MorphToMany`), antes de apagar ou de permitir apagar.
+- [ ] **Config de cascade no delete** — desenhar config (ou declaração no model) do tipo:
+
+```php
+[
+  'deleted' => [
+    [
+      'relation' => MorphTo::class /* | MorphOne | MorphMany | MorphToMany */,
+      // Qual o padrão do banco / Eloquent hoje?
+      // Opções de cascade: null | delete | … ?
+      'cascade' => 'delete', // ou 'forceDelete' — default: 'delete'
+    ],
+  ],
+]
+```
+
+- [ ] **Alinhar soft delete vs force delete** — por parent: soft-deletable cascade soft; parent sem SoftDeletes cascade delete real (ver exemplo User vs Event acima). Documentar o default escolhido.
+- [ ] **Testes dos métodos** — Feature/Service/unit cobrindo: registro em uso (bloqueia ou falha), registro sem uso (permite), cascade soft vs hard, cada tipo de morph relevante.
+- [ ] **Cruzar com registry `tables`** — só depois de decidir fonte de verdade morph map vs `tables` (ver risco na seção anterior); não misturar `*_type` com `tables.id` sem desenho.
+
+## Faker ORM (populator)
+
+- [ ] **Avaliar [Faker ORM Integration](https://fakerphp.org/orm/)** — o FakerPHP tem adapter Eloquent (`Faker\ORM\…\Populator`) que popula entidades via guessers de nome/tipo de coluna, relaciona PKs entre `addEntity`, e aceita closures/`null` por coluna. Comparar com as factories Laravel do projeto: quando o populator ajuda (seed em massa, protótipo) vs quando factories + states continuam melhores (tests, contratos explícitos). Decidir se entra no boilerplate, só em seeders, ou fica de fora — e documentar a escolha.
