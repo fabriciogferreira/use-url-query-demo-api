@@ -8,8 +8,10 @@ ARG GID=1000
 ARG NODE_VERSION=22.0.0
 
 # Install system dependencies and build libraries
+# git: required by Pest TIA (pest()->tia()->locally() in tests/Pest.php)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
+    git \
     unzip \
     libpq-dev \
     libonig-dev \

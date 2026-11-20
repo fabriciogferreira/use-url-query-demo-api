@@ -34,6 +34,20 @@ pest()->extend(TestCase::class)
 
 /*
 |--------------------------------------------------------------------------
+| Tia Engine (local only)
+|--------------------------------------------------------------------------
+|
+| Re-run only tests affected by local changes. Skipped with --ci / --no-tia.
+| Full-suite gates (pre-deploy) must pass --ci. Needs git + PCOV or Xdebug.
+| Graph under .pest/tia/ (gitignored).
+|
+*/
+pest()->tia()
+  ->locally()
+  ->directory('.pest/tia');
+
+/*
+|--------------------------------------------------------------------------
 | Expectations
 |--------------------------------------------------------------------------
 |

@@ -32,3 +32,6 @@ Thumbs.db
 /.php-cs-fixer.php
 # GAMB TECH TO WORK PHP-CS-FIXER EXTENSION
 .vscode/php-cs-fixer-tmp/
+
+# Pest TIA graph / cached results (local; do not commit)
+/.pest/
