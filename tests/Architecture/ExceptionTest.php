@@ -2,14 +2,15 @@
 
 declare(strict_types=1);
 
-use Illuminate\Foundation\Exceptions\Handler;
+use Throwable;
 
 $path = 'App\Exceptions';
 
-// arch("only exceptions in {$path}")
-//   ->expect($path)
-//   ->toExtend(Handler::class);
+arch("exceptions in {$path} implement Throwable")
+    ->expect($path)
+    ->classes()
+    ->toImplement(Throwable::class);
 
-arch("suffix exceptions with Exception")
-  ->expect($path)
-  ->toHaveSuffix('Exception');
+arch('suffix exceptions with Exception')
+    ->expect($path)
+    ->toHaveSuffix('Exception');
