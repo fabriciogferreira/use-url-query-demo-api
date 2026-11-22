@@ -35,3 +35,7 @@ Thumbs.db
 
 # Pest TIA graph / cached results (local; do not commit)
 /.pest/
+
+**/caddy
+frankenphp
+frankenphp-worker.php

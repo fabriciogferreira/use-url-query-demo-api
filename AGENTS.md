@@ -3,21 +3,55 @@
 
 # Environment
 
-This project runs in Docker. Run Artisan, tests, Pint, and other `vendor/bin/*` tooling inside the `workspace` service — never on the host. This overrides Laravel Boost's default of running those commands on the host.
+This project runs in Docker. Run Artisan, tests, php-cs-fixer, and other `vendor/bin/*` tooling inside the `workspace` service — never on the host. This overrides Laravel Boost's default of running those commands on the host.
 
-Compose file: `compose.dev.yaml`. Service: `workspace`. Container name: `boilerplate-laravel-workspace`.
+Compose file: `compose.dev.yaml`. Service: `workspace`. Container name: `use-url-query-demo-api-workspace`.
 
 ```bash
 docker compose -f compose.dev.yaml exec workspace php artisan test
 ```
 
 ```bash
-docker container exec boilerplate-laravel-workspace php artisan test
+docker container exec use-url-query-demo-api-workspace php artisan test
 ```
 
 ```bash
-docker compose -f compose.dev.yaml exec workspace vendor/bin/pint --dirty --format agent
+docker compose -f compose.dev.yaml exec workspace \
+  vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.dist.php path/to/ChangedFile.php
 ```
+
+Do **not** use Laravel Pint (`vendor/bin/pint`). Formatting is php-cs-fixer only (see `.php-cs-fixer.dist.php`). php-cs-fixer has no `--dirty` flag — pass the paths you changed.
+
+The workspace image installs **Xdebug** (debug) and **PCOV** (coverage). For `--coverage` / `--mutate`, always disable Xdebug so Pest uses PCOV (~2.8× faster line coverage — [PCOV or Xdebug?](https://phpunit.expert/articles/pcov-or-xdebug.html)):
+
+```bash
+docker compose -f compose.dev.yaml exec -e XDEBUG_MODE=off workspace \
+  php artisan test --compact --coverage
+```
+
+=== .ai/pint/core rules ===
+
+# PHP CS Fixer (not Pint)
+
+This project does **not** use Laravel Pint. Do not install or run `vendor/bin/pint`.
+
+- Follow the project Environment guideline when running formatters (Docker `workspace` service — never on the host).
+- Canonical style is `.php-cs-fixer.dist.php` (2-space indent, opening braces on the same line). The editor uses junstyle.php-cs-fixer via `.vscode/php-cs-fixer`.
+- If you have modified any PHP files, run php-cs-fixer on those paths (there is no `--dirty` flag):
+
+```bash
+docker compose -f compose.dev.yaml exec workspace \
+  vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.dist.php path/to/ChangedFile.php
+```
+
+Or several paths:
+
+```bash
+docker container exec use-url-query-demo-api-workspace \
+  vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.dist.php app/Http/Controllers app/Services
+```
+
+- Do not use Pint presets or create `pint.json`.
 
 === foundation rules ===
 
@@ -118,6 +152,16 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 This project does not use Laravel Cloud. Do not apply Laravel Cloud deployment guidance.
 
+=== tests rules ===
+
+# Test Enforcement
+
+- Add or update tests for behavior and logic changes when a test provides meaningful regression coverage.
+- Pure copy, styling, and layout-only changes do not require new or updated tests.
+- When test coverage applies, run the affected tests and ensure they pass.
+- Test the changed behavior and its important failure modes, but do not add tests beyond them.
+- Read the `testing-best-practices` skill before writing tests.
+
 === laravel/core rules ===
 
 # Do Things the Laravel Way
@@ -147,13 +191,17 @@ This project does not use Laravel Cloud. Do not apply Laravel Cloud deployment g
 - Faker: Use methods such as `$this->faker->word()` or `fake()->randomDigit()`. Follow existing conventions whether to use `$this->faker` or `fake()`.
 - Create tests with `php artisan make:test --pest {name}`. Do not include the suite directory in `{name}`.
 
-=== pint/core rules ===
+=== laravel-octane/core rules ===
 
-# Laravel Pint Code Formatter
+# Laravel Octane
 
-- Follow the project Environment guideline when running Pint (Docker `workspace` service — never on the host).
-- If you have modified any PHP files, you must run `vendor/bin/pint --dirty --format agent` before finalizing changes to ensure your code matches the project's expected style.
-- Do not run `vendor/bin/pint --test --format agent`, simply run `vendor/bin/pint --format agent` to fix any formatting issues.
+This application uses Laravel Octane, a long-running PHP server. The application bootstraps once and handles many requests within the same process.
+
+- Never store request-specific state in singletons or static properties, because it can leak across requests.
+- Use `config('octane.server')` to detect the active driver (`swoole`, `roadrunner`, or `frankenphp`).
+- Prefer scoped bindings (`$this->app->scoped()`) over singletons for per-request services.
+
+When working on Octane-specific features (concurrency, shared tables, memory, driver configuration, testing), invoke `octane-development` for detailed rules.
 
 === pest/core rules ===
 

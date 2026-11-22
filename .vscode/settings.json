@@ -1,5 +1,5 @@
 {
-  "phpstan.dockerContainerName": "boilerplate-laravel-workspace",
+  "phpstan.dockerContainerName": "use-url-query-demo-api-workspace",
   "phpstan.paths": {
     "${workspaceFolder}": "/var/www"
   },

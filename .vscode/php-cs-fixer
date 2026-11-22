@@ -1,15 +1,26 @@
 #!/usr/bin/env bash
 # Bridge for junstyle.php-cs-fixer: host has no PHP; run Fixer inside the workspace container.
-# Extension temps live under /tmp on the host. Do not rely on the project bind-mount:
-# demo-api and boilerplate share container_name, so only one tree is mounted at /var/www.
-# Always docker cp the temp (and config) into the container, fix, copy back.
+# Extension temps live under /tmp on the host. Do not rely on the project bind-mount alone
+# (host-card / shared mounts may not expose /tmp). Always docker cp the temp (and config),
+# fix, copy back.
 
 set -euo pipefail
 
 # On clone/fork: rename to match compose.dev.yaml workspace container_name
 # (see README "Docker container names"). Stale name → docker exec ENOENT.
-CONTAINER="boilerplate-laravel-workspace"
+CONTAINER="use-url-query-demo-api-workspace"
 CONTAINER_TMP="/tmp/pcf-bridge-$$"
+
+if ! docker container inspect "$CONTAINER" >/dev/null 2>&1; then
+  # Host-card compose omits fixed container_name; pick a running *workspace* for this project.
+  alt=$(docker ps --format '{{.Names}}' | grep -E 'use-url-query.*workspace' | head -n1 || true)
+  if [[ -n "$alt" ]]; then
+    CONTAINER="$alt"
+  else
+    echo "php-cs-fixer: no container '${CONTAINER}' (and no host-card *workspace)." >&2
+    exit 1
+  fi
+fi
 
 args=()
 TEMP_HOST=""

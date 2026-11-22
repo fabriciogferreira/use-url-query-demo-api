@@ -1,10 +1,10 @@
-# boilerplate-laravel
+# use-url-query-demo-api
 
-Boilerplate to development in Laravel with PostgreSQL, PHPStan, php-cs-fixer, Laravel Boost, Sanctum and Pest. This boilerplate is focused to work with Cursor or VS Code.
+Demo Laravel API for the `use-url-query` playground (PostgreSQL, PHPStan, php-cs-fixer, Laravel Boost, Sanctum, Pest, Spatie Query Builder). Forked from `boilerplate-laravel`; identity slug is `use-url-query-demo-api`.
 
 ## Starting a new project from this repository
 
-After cloning or forking, rename every `boilerplate-laravel` occurrence to your project slug (example: `nome-do-seu-projeto`). Prefer kebab-case for Docker container names.
+After cloning or forking, rename every `use-url-query-demo-api` occurrence to your project slug (example: `nome-do-seu-projeto`). Prefer kebab-case for Docker container names.
 
 ### 1. Project identity
 
@@ -17,14 +17,14 @@ After cloning or forking, rename every `boilerplate-laravel` occurrence to your 
 
 ### 2. Docker container names
 
-Replace the `boilerplate-laravel-*` prefixes in:
+Replace the `use-url-query-demo-api-*` prefixes in:
 
 - [ ] `compose.dev.yaml` (`web`, `php-fpm`, `workspace`, `postgres`, `redis`)
 - [ ] `compose.prod.yaml` (`web`, `php-fpm`, `postgres`, `redis`)
 - [ ] `.vscode/php-cs-fixer` — `CONTAINER=` must match the Compose `workspace` `container_name` (junstyle runs Fixer via `docker exec` on that container; leaving the boilerplate name after a rename → `No such container`)
 - [ ] `.vscode/settings.json` — `phpstan.dockerContainerName` (same `*-workspace` name)
 
-Example: `boilerplate-laravel-workspace` → `nome-do-seu-projeto-workspace`
+Example: `use-url-query-demo-api-workspace` → `nome-do-seu-projeto-workspace`
 
 ### 3. Example `users.status` (keep or remove)
 
@@ -55,5 +55,5 @@ The `workspace` image includes **Xdebug** and **PCOV**. Day-to-day debug uses Xd
 Quick check that nothing was left behind:
 
 ```bash
-rg 'boilerplate-laravel' --glob '!.git/**'
+rg 'use-url-query-demo-api' --glob '!.git/**'
 ```

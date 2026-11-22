@@ -1,0 +1,35 @@
+# Imagem única de produção (Coolify / GHCR), no mesmo desenho do Opbed backend.
+# Dev local continua em compose.dev.yaml (nginx + php-fpm).
+FROM composer:2.10.1 AS composer
+
+WORKDIR /app/public
+
+COPY . /app/public
+
+RUN composer install \
+  --no-dev \
+  --optimize-autoloader \
+  --classmap-authoritative \
+  --prefer-dist \
+  --no-interaction \
+  --no-progress \
+  --no-scripts \
+  --no-plugins
+
+FROM dunglas/frankenphp:1.12.4-php8.5.7-trixie
+
+WORKDIR /app/public
+
+COPY --from=composer /app/public /app/public
+
+# pcntl: Octane / FrankenPHP
+# pdo_pgsql: Postgres (compose.prod / Coolify)
+# intl: validação de e-mail
+# redis: cache/queue quando REDIS_HOST estiver setado
+RUN install-php-extensions \
+  pcntl \
+  pdo_pgsql \
+  intl \
+  redis
+
+CMD [ "sh", "-c", "php artisan migrate --force --no-interaction && php artisan octane:frankenphp --port=80" ]

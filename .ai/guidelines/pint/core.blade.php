@@ -1,13 +1,22 @@
-@php
-/** @var \Laravel\Boost\Install\GuidelineAssist $assist */
-@endphp
-# Laravel Pint Code Formatter
+{{-- Problem: Boost ships Pint guidelines; this project formats with php-cs-fixer only. --}}
+# PHP CS Fixer (not Pint)
 
-- Follow the project Environment guideline when running Pint (Docker `workspace` service — never on the host).
-@if($assist->supportsPintAgentFormatter())
-- If you have modified any PHP files, you must run `{{ $assist->binCommand('pint') }} --dirty --format agent` before finalizing changes to ensure your code matches the project's expected style.
-- Do not run `{{ $assist->binCommand('pint') }} --test --format agent`, simply run `{{ $assist->binCommand('pint') }} --format agent` to fix any formatting issues.
-@else
-- If you have modified any PHP files, you must run `{{ $assist->binCommand('pint') }} --dirty` before finalizing changes to ensure your code matches the project's expected style.
-- Do not run `{{ $assist->binCommand('pint') }} --test`, simply run `{{ $assist->binCommand('pint') }}` to fix any formatting issues.
-@endif
+This project does **not** use Laravel Pint. Do not install or run `vendor/bin/pint`.
+
+- Follow the project Environment guideline when running formatters (Docker `workspace` service — never on the host).
+- Canonical style is `.php-cs-fixer.dist.php` (2-space indent, opening braces on the same line). The editor uses junstyle.php-cs-fixer via `.vscode/php-cs-fixer`.
+- If you have modified any PHP files, run php-cs-fixer on those paths (there is no `--dirty` flag):
+
+```bash
+docker compose -f compose.dev.yaml exec workspace \
+  vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.dist.php path/to/ChangedFile.php
+```
+
+Or several paths:
+
+```bash
+docker container exec use-url-query-demo-api-workspace \
+  vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.dist.php app/Http/Controllers app/Services
+```
+
+- Do not use Pint presets or create `pint.json`.

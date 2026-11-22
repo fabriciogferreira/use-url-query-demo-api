@@ -1,6 +1,6 @@
 services:
   web:
-    container_name: boilerplate-laravel-web
+    container_name: use-url-query-demo-api-web
     image: nginx:latest # Using the default Nginx image with custom configuration.
     volumes:
       # Mount the application code for live updates
@@ -19,7 +19,7 @@ services:
         condition: service_started  # Wait for php-fpm to start
 
   php-fpm:
-    container_name: boilerplate-laravel-php-fpm
+    container_name: use-url-query-demo-api-php-fpm
     # For the php-fpm service, we will use our common PHP-FPM Dockerfile with the development target
     build:
       context: .
@@ -48,7 +48,7 @@ services:
         condition: service_healthy
 
   workspace:
-    container_name: boilerplate-laravel-workspace
+    container_name: use-url-query-demo-api-workspace
     # For the workspace service, we will also create a custom image to install and setup all the necessary stuff.
     build:
       context: .
@@ -77,12 +77,12 @@ services:
         condition: service_healthy
 
   postgres:
-    container_name: boilerplate-laravel-postgres
+    container_name: use-url-query-demo-api-postgres
     image: postgres:18
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     environment:
-      - POSTGRES_DB=boilerplate-laravel
+      - POSTGRES_DB=use-url-query-demo-api
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=secret
     volumes:
@@ -91,14 +91,14 @@ services:
     networks:
       - laravel-development
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U root -d boilerplate-laravel']
+      test: ['CMD-SHELL', 'pg_isready -U root -d use-url-query-demo-api']
       interval: 2s
       timeout: 5s
       retries: 30
       start_period: 5s
 
   redis:
-    container_name: boilerplate-laravel-redis
+    container_name: use-url-query-demo-api-redis
     image: redis:alpine
     networks:
       - laravel-development
