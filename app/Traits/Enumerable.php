@@ -13,8 +13,9 @@ trait Enumerable {
       throw new BusinessRuleException('Duplicate values are not allowed.');
     }
 
+    /** @var array<array-key, int|string> $keysValue */
     $keysValue = collect(self::cases())
-      ->reduce(function ($carry, $case) {
+      ->reduce(function (array $carry, BackedEnum $case): array {
         $carry[$case->value] = $case->value;
         $carry[$case->name] = $case->value;
 
@@ -31,7 +32,7 @@ trait Enumerable {
   /**
    * @param  string[]  $only
    * @param  string[]  $except
-   * @return array<int, int | string>
+   * @return array<int, int|string>
    */
   public static function values(array $only = [], array $except = []): array {
     $values = self::cases();
@@ -72,11 +73,12 @@ trait Enumerable {
   /**
    * @param  string[]  $only
    * @param  string[]  $except
-   * @return array<string, array<int, string>>
+   * @return array<string, list<int|string>>
    */
   public static function toProvider(array $only = [], array $except = []): array {
+    // (string) is for PHPStan; strtolower coerces int|string the same at runtime
     return collect(self::values(only: $only, except: $except))
-      ->mapWithKeys(fn ($value) => [strtolower($value) => [$value]])
-      ->toArray();
+      ->mapWithKeys(fn (int|string $value) => [strtolower((string) $value) => [$value]]) // @pest-mutate-ignore: RemoveStringCast
+      ->all();
   }
 }

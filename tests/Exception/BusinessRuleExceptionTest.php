@@ -9,6 +9,7 @@ test('BusinessRuleException uses unprocessable entity status', function () {
 
   expect($exception->getStatusCode())->toBe(422);
   expect($exception->getMessage())->toBe('Duplicate values are not allowed.');
+  expect($exception->getCode())->toBe(0);
 });
 
 test('BusinessRuleException keeps previous and headers', function () {
@@ -16,5 +17,6 @@ test('BusinessRuleException keeps previous and headers', function () {
   $exception = new BusinessRuleException('rule broken', $previous, ['X-Test' => '1']);
 
   expect($exception->getPrevious())->toBe($previous)
-    ->and($exception->getHeaders())->toBe(['X-Test' => '1']);
+    ->and($exception->getHeaders())->toBe(['X-Test' => '1'])
+    ->and($exception->getCode())->toBe(0);
 });

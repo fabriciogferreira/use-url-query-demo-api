@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use Throwable;
-
 $path = 'App\Exceptions';
 
 arch("exceptions in {$path} implement Throwable")

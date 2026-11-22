@@ -8,8 +8,8 @@ use Illuminate\Validation\ValidationException;
  *
  * Validates each invalid value directly against the form request rules.
  *
- * @param class-string<BaseRequest> $formRequest The form request class.
- * @param array<string, array<string, mixed>> $fieldWrongValues Map of fields to invalid values grouped by rule.
+ * @param  class-string<BaseRequest>  $formRequest  The form request class.
+ * @param  array<string, array<string, mixed>>  $fieldWrongValues  Map of fields to invalid values grouped by rule.
  */
 function assertThrowsValidationException(
   string $formRequest,

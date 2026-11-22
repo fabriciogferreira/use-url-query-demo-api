@@ -1,56 +1,45 @@
-# GAMB TECH TO WORK PHP-CS-FIXER EXTENSION
 #!/usr/bin/env bash
+# Bridge for junstyle.php-cs-fixer: host has no PHP; run Fixer inside the workspace container.
+# Temp files from the extension live under /tmp on the host — copy into the mounted tree, fix, copy back.
 
 set -euo pipefail
 
-CONTAINER="vid2agent-code-php-fpm"
-HOST_WORKSPACE="/home/fabricio/git/vid2agent-code/vid2agent-code"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HOST_WORKSPACE="$(cd "${SCRIPT_DIR}/.." && pwd)"
+CONTAINER="boilerplate-laravel-workspace"
 CONTAINER_WORKSPACE="/var/www"
 
 args=()
 TEMP_HOST=""
-TEMP_CONTAINER=""
+filename=""
 
 for arg in "$@"; do
+  if [[ "$arg" == --config=* ]]; then
+    config="${arg#--config=}"
+    config="${config//$HOST_WORKSPACE/$CONTAINER_WORKSPACE}"
+    args+=("--config=$config")
+    continue
+  fi
 
-    # Config
-    if [[ "$arg" == --config=* ]]; then
-        config="${arg#--config=}"
-        config="${config//$HOST_WORKSPACE/$CONTAINER_WORKSPACE}"
-        args+=("--config=$config")
-        continue
-    fi
+  if [[ "$arg" == /tmp/pcf-tmp* ]]; then
+    TEMP_HOST="$arg"
+    filename="${arg##*/}"
+    mkdir -p "${HOST_WORKSPACE}/.vscode/php-cs-fixer-tmp"
+    cp "$TEMP_HOST" "${HOST_WORKSPACE}/.vscode/php-cs-fixer-tmp/${filename}"
+    args+=("${CONTAINER_WORKSPACE}/.vscode/php-cs-fixer-tmp/${filename}")
+    continue
+  fi
 
-    # Arquivo temporário criado pela extensão no host
-    if [[ "$arg" == /tmp/pcf-tmp* ]]; then
-        TEMP_HOST="$arg"
-        filename="${arg##*/}"
-
-        # Usamos uma área compartilhada pelo container.
-        TEMP_CONTAINER="$CONTAINER_WORKSPACE/.vscode/php-cs-fixer-tmp/$filename"
-
-        mkdir -p "$HOST_WORKSPACE/.vscode/php-cs-fixer-tmp"
-
-        # Copia o arquivo temporário do host para a área compartilhada.
-        cp "$TEMP_HOST" "$HOST_WORKSPACE/.vscode/php-cs-fixer-tmp/$filename"
-
-        args+=("$TEMP_CONTAINER")
-        continue
-    fi
-
-    args+=("$arg")
+  args+=("$arg")
 done
 
-# Executa o PHP CS Fixer dentro do container.
 docker container exec -i \
-    "$CONTAINER" \
-    /var/www/vendor/bin/php-cs-fixer \
-    "${args[@]}"
+  "$CONTAINER" \
+  /var/www/vendor/bin/php-cs-fixer \
+  "${args[@]}"
 
-# Copia o arquivo formatado de volta para o temporário original
-# que a extensão está esperando.
 if [[ -n "$TEMP_HOST" ]]; then
-    cp \
-        "$HOST_WORKSPACE/.vscode/php-cs-fixer-tmp/$filename" \
-        "$TEMP_HOST"
+  cp \
+    "${HOST_WORKSPACE}/.vscode/php-cs-fixer-tmp/${filename}" \
+    "$TEMP_HOST"
 fi

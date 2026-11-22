@@ -1,10 +1,5 @@
 <?php
 
-use App\Http\Requests\Common\BaseRequest;
-
-use Illuminate\Database\Eloquent\Model;
-use Tests\Feature\FeatureTest;
-
 /*
 |--------------------------------------------------------------------------
 | Commons

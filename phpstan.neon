@@ -18,11 +18,9 @@ parameters:
     # Level 10 is the highest level
     level: 10
 
-    ignoreErrors:
-        # Trait is required by Enum architecture; unused until the first domain enum exists.
-        -
-            identifier: trait.unused
-            path: app/Traits/Enumerable.php
-
+#    ignoreErrors:
+#        - '#PHPDoc tag @var#'
+#
 #    excludePaths:
 #        - ./*/*/FileToBeExcluded.php
+

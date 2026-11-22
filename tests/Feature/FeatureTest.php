@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Http\Requests\Common\BaseRequest;
-
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -11,15 +10,23 @@ use Illuminate\Database\Eloquent\Model;
  */
 abstract class FeatureTest {
   public string $baseUrl;
+
   public string $url;
+
   public string $httpMethod;
+
   /** @var array<string, mixed> */
   public array $payload;
+
   public string $modelClass;
+
   public int $responseCode;
+
   public bool $isAuthentic;
+
   /** @var TModel */
   public Model $model;
+
   /** @var class-string<BaseRequest> */
   public string $formRequestClass;
 
@@ -32,7 +39,7 @@ abstract class FeatureTest {
     bool $isAuthentic = true
   ) {
     $this->httpMethod = $httpMethod;
-    $this->baseUrl = $this->baseUrl() . $path;
+    $this->baseUrl = $this->baseUrl().$path;
     $this->modelClass = $this->modelClass();
     $this->payload = $payload;
     $this->url = $this->baseUrl;
@@ -42,10 +49,11 @@ abstract class FeatureTest {
   }
 
   abstract protected function baseUrl(): string;
+
   abstract protected function modelClass(): string;
 
   /**
-   * @param array<int, mixed> $items
+   * @param  array<int, mixed>  $items
    * @return array<int, array<int, mixed>>
    */
   private function powerSet(array $items, bool $includeEmpty = true): array {
@@ -67,7 +75,7 @@ abstract class FeatureTest {
   }
 
   /**
-   * @param array<string, string|int> ...$payloads
+   * @param  array<string, string|int>  ...$payloads
    * @return array<string, list<array<string, string|int>>>
    */
   public function makePayloadCases(array ...$payloads): array {

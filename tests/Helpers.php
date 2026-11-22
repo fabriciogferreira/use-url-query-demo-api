@@ -14,7 +14,7 @@ use App\Models\User;
 /**
  * Retrieves a user by email from the database.
  *
- * @param string $email The email of the user to retrieve. Defaults to 'user@user.com'.
+ * @param  string  $email  The email of the user to retrieve. Defaults to 'user@user.com'.
  */
 function getUser(string $email = 'user@user.com'): User {
   return User::query()
@@ -23,17 +23,9 @@ function getUser(string $email = 'user@user.com'): User {
 }
 
 /**
- * Creates a user with `system_role` super (global authorization).
- */
-function superUser(): User {
-  return User::factory()->super()->create();
-}
-
-/**
  * This function takes an associative array of test cases, where each key is a field name and each value is an associative array of validation rules and their corresponding wrong values. It generates a new associative array of payloads, where each key is a unique dataset name (combination of field and rule) and each value is an array containing the field name and the wrong value. This is useful for testing validation scenarios in a structured way.
  *
- * @param array<string, array<string, mixed>> $cases
- *
+ * @param  array<string, array<string, mixed>>  $cases
  * @return array<string, array<mixed>>
  */
 function makePayloads(array $cases): array {
@@ -41,7 +33,7 @@ function makePayloads(array $cases): array {
 
   foreach ($cases as $field => $wrongValues) {
     foreach ($wrongValues as $rule => $wrongValue) {
-      $datasetName = join('_', [$field, $rule]);
+      $datasetName = implode('_', [$field, $rule]);
 
       $payloads[$datasetName] = [$field, $wrongValue];
     }

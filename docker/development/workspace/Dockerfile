@@ -53,6 +53,12 @@ RUN if [ "${XDEBUG_ENABLED}" = "true" ]; then \
     echo "xdebug.start_with_request=yes" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini ; \
 fi
 
+# PCOV for Pest/PHPUnit --coverage / --mutate (much faster line coverage than Xdebug).
+# Both may be installed; for coverage always run with XDEBUG_MODE=off so PCOV is used.
+# See https://phpunit.expert/articles/pcov-or-xdebug.html
+RUN pecl install pcov \
+    && docker-php-ext-enable pcov
+
 # If the group already exists, use it; otherwise, create the 'www' group
 RUN if getent group ${GID}; then \
       useradd -m -u ${UID} -g ${GID} -s /bin/bash www; \

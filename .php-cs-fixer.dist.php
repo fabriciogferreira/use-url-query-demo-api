@@ -8,8 +8,17 @@ use PhpCsFixer\Finder;
 $config = new Config();
 $finder = new Finder();
 
-// 💡 root folder to check
-$finder->in(__DIR__);
+// Root project PHP only — compiled Blade in storage/framework/views bloated the
+// finder (~900 files) and made parallel workers hit the 120s child timeout.
+$finder
+  ->in(__DIR__)
+  ->exclude([
+    'bootstrap/cache',
+    'node_modules',
+    'storage',
+    'tmp',
+    'vendor',
+  ]);
 
 return $config
   ->setIndent('  ') // 2 espaços
@@ -28,7 +37,6 @@ return $config
     'braces_position'                    => [
       'functions_opening_brace' => 'same_line',
       'classes_opening_brace'   => 'same_line',
-    ]
+    ],
   ])
-    // 💡 by default, Fixer looks for `*.php` files excluding `./vendor/` - here, you can groom this config
   ->setFinder($finder);

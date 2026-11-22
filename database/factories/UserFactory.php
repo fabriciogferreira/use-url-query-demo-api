@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\User\UserStatusEnum;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -27,6 +28,7 @@ class UserFactory extends Factory {
       'email'             => fake()->unique()->safeEmail(),
       'email_verified_at' => now(),
       'password'          => static::$password ??= Hash::make('password'),
+      'status'            => UserStatusEnum::ACTIVE,
       'remember_token'    => Str::random(10),
     ];
   }
@@ -41,9 +43,11 @@ class UserFactory extends Factory {
   }
 
   /**
-   * Placeholder for a global `system_role` super user (add the column when auth needs it).
+   * Indicate that the user is inactive.
    */
-  public function super(): static {
-    return $this->state(fn (array $attributes) => []);
+  public function inactive(): static {
+    return $this->state(fn (array $attributes) => [
+      'status' => UserStatusEnum::INACTIVE,
+    ]);
   }
 }
