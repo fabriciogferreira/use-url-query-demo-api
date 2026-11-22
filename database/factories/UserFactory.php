@@ -39,4 +39,11 @@ class UserFactory extends Factory {
       'email_verified_at' => null,
     ]);
   }
+
+  /**
+   * Placeholder for a global `system_role` super user (add the column when auth needs it).
+   */
+  public function super(): static {
+    return $this->state(fn (array $attributes) => []);
+  }
 }

@@ -1,4 +1,24 @@
 <laravel-boost-guidelines>
+=== .ai/environment rules ===
+
+# Environment
+
+This project runs in Docker. Run Artisan, tests, Pint, and other `vendor/bin/*` tooling inside the `workspace` service — never on the host. This overrides Laravel Boost's default of running those commands on the host.
+
+Compose file: `compose.dev.yaml`. Service: `workspace`. Container name: `boilerplate-laravel-workspace`.
+
+```bash
+docker compose -f compose.dev.yaml exec workspace php artisan test
+```
+
+```bash
+docker container exec boilerplate-laravel-workspace php artisan test
+```
+
+```bash
+docker compose -f compose.dev.yaml exec workspace vendor/bin/pint --dirty --format agent
+```
+
 === foundation rules ===
 
 # Laravel Boost Guidelines
@@ -70,7 +90,8 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 ## Artisan
 
-- Run Artisan commands directly via the command line (e.g., `php artisan route:list`). Use `php artisan list` to discover available commands and `php artisan [command] --help` to check parameters.
+- Follow the project Environment guideline when running Artisan.
+- Use `php artisan list` and `php artisan [command] --help` to discover commands and parameters.
 - Inspect routes with `php artisan route:list`. Filter with: `--method=GET`, `--name=users`, `--path=api`, `--except-vendor`, `--only-vendor`.
 - Read configuration values using dot notation: `php artisan config:show app.name`, `php artisan config:show database.default`. Or read config files directly from the `config/` directory.
 
@@ -87,7 +108,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - Always use curly braces for control structures, even for single-line bodies.
 - Use PHP 8 constructor property promotion: `public function __construct(public GitHub $github) { }`. Do not leave empty zero-parameter `__construct()` methods unless the constructor is private.
 - Use explicit return type declarations and type hints for all method parameters: `function isAccessible(User $user, ?string $path = null): bool`
-- Use TitleCase for Enum keys: `FavoritePerson`, `BestLake`, `Monthly`.
+- Enum case naming: follow `.ai/rules/enums.md` (`UPPER_SNAKE_CASE` / snake_case values).
 - Prefer PHPDoc blocks over inline comments. Only add inline comments for exceptionally complex logic.
 - Use array shape type definitions in PHPDoc blocks.
 
@@ -95,12 +116,13 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 # Deployment
 
-- Laravel can be deployed using [Laravel Cloud](https://cloud.laravel.com/), which is the fastest way to deploy and scale production Laravel applications.
+This project does not use Laravel Cloud. Do not apply Laravel Cloud deployment guidance.
 
 === laravel/core rules ===
 
 # Do Things the Laravel Way
 
+- Follow the project Environment guideline when running Artisan, including `make:` and `make:test`.
 - Use `php artisan make:` commands to create new files (i.e. migrations, controllers, models, etc.). You can list available Artisan commands using `php artisan list` and check their parameters with `php artisan [command] --help`.
 - If you're creating a generic PHP class, use `php artisan make:class`.
 - Pass `--no-interaction` to all Artisan commands to ensure they work without user input. You should also pass the correct `--options` to ensure correct behavior.
@@ -109,9 +131,9 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 - When creating new models, create useful factories and seeders for them too. Ask the user if they need any other things, using `php artisan make:model --help` to check the available options.
 
-## APIs & Eloquent Resources
+## APIs & HTTP responses
 
-- For APIs, default to using Eloquent API Resources and API versioning unless existing API routes do not, then you should follow existing application convention.
+- Follow `.ai/rules/controllers.md` for API responses: return `response([...], SymfonyResponse::HTTP_*)` with an explicit status. Do not introduce Eloquent API Resources unless that pattern already exists in the application.
 
 ## URL Generation
 
@@ -119,14 +141,17 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 ## Testing
 
+- Follow the project Environment guideline when running tests and `make:test`.
+- Follow `.ai/rules/tests.md` (and `.ai/rules/feature.md` for Feature HTTP tests). Do not use `tests/Unit` or mirror `app/` under `tests/`.
 - When creating models for tests, use the factories for the models. Check if the factory has custom states that can be used before manually setting up the model.
 - Faker: Use methods such as `$this->faker->word()` or `fake()->randomDigit()`. Follow existing conventions whether to use `$this->faker` or `fake()`.
-- When creating tests, make use of `php artisan make:test [options] {name}` to create a feature test, and pass `--unit` to create a unit test. Most tests should be feature tests.
+- Create tests with `php artisan make:test --pest {name}`. Do not include the suite directory in `{name}`.
 
 === pint/core rules ===
 
 # Laravel Pint Code Formatter
 
+- Follow the project Environment guideline when running Pint (Docker `workspace` service — never on the host).
 - If you have modified any PHP files, you must run `vendor/bin/pint --dirty --format agent` before finalizing changes to ensure your code matches the project's expected style.
 - Do not run `vendor/bin/pint --test --format agent`, simply run `vendor/bin/pint --format agent` to fix any formatting issues.
 
@@ -141,6 +166,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 ## Running Tests
 
+- Follow the project Environment guideline when running tests (Docker `workspace` service — never on the host).
 - Run the narrowest set of tests that covers the change. Pass a file path or `--filter=testName` to `php artisan test --compact`.
 - Rerun a test after each change to it.
 - Run `vendor/bin/pest` to call the test runner directly. It accepts the same file path and `--filter=testName` arguments.

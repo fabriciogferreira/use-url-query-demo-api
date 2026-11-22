@@ -68,14 +68,17 @@ abstract class FeatureTest {
 
   /**
    * @param array<string, string|int> ...$payloads
-   * @return array<string, array<int, array<mixed, mixed>>>
+   * @return array<string, list<array<string, string|int>>>
    */
   public function makePayloadCases(array ...$payloads): array {
-    $payloadPowerSet = $this->powerSet([...$payloads], false);
+    /** @var list<array<string, string|int>> $items */
+    $items = array_values($payloads);
+    $payloadPowerSet = $this->powerSet($items, false);
 
     $payloadPowerSet = collect($payloadPowerSet);
 
-    $cases = $payloadPowerSet->mapWithKeys(function ($combination) {
+    $cases = $payloadPowerSet->mapWithKeys(function (array $combination) {
+      /** @var list<array<string, string|int>> $combination */
       $payloadMerged = array_merge(...$combination);
 
       $key = implode(',', array_keys($payloadMerged));

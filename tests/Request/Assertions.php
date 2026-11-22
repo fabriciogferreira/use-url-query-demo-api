@@ -25,6 +25,7 @@ function assertThrowsValidationException(
 
     // @phpstan-ignore method.notFound
     $rules = $abilityStoreRequest->rules();
+    assert(is_array($rules));
 
     $validator = validator([$field => $wrongValue], $rules);
 
