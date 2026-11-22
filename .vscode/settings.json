@@ -1,7 +1,10 @@
 {
-  "phpstan.dockerContainerName": "vid2agent-code-php-fpm",
+  "phpstan.dockerContainerName": "boilerplate-laravel-workspace",
   "phpstan.paths": {
-    "${workspaceFolder}": "/var/www",
+    "${workspaceFolder}": "/var/www"
   },
   "php-cs-fixer.executablePath": "${workspaceFolder}/.vscode/php-cs-fixer",
+  "[php]": {
+    "editor.defaultFormatter": "junstyle.php-cs-fixer"
+  }
 }

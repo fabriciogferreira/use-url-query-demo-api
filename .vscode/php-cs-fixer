@@ -1,37 +1,52 @@
 #!/usr/bin/env bash
 # Bridge for junstyle.php-cs-fixer: host has no PHP; run Fixer inside the workspace container.
-# Temp files from the extension live under /tmp on the host — copy into the mounted tree, fix, copy back.
+# Extension temps live under /tmp on the host. Do not rely on the project bind-mount:
+# demo-api and boilerplate share container_name, so only one tree is mounted at /var/www.
+# Always docker cp the temp (and config) into the container, fix, copy back.
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-HOST_WORKSPACE="$(cd "${SCRIPT_DIR}/.." && pwd)"
+# On clone/fork: rename to match compose.dev.yaml workspace container_name
+# (see README "Docker container names"). Stale name → docker exec ENOENT.
 CONTAINER="boilerplate-laravel-workspace"
-CONTAINER_WORKSPACE="/var/www"
+CONTAINER_TMP="/tmp/pcf-bridge-$$"
 
 args=()
 TEMP_HOST=""
 filename=""
+HOST_CONFIG=""
+
+cleanup() {
+  docker container exec "$CONTAINER" rm -rf "$CONTAINER_TMP" >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
 
 for arg in "$@"; do
   if [[ "$arg" == --config=* ]]; then
-    config="${arg#--config=}"
-    config="${config//$HOST_WORKSPACE/$CONTAINER_WORKSPACE}"
-    args+=("--config=$config")
+    HOST_CONFIG="${arg#--config=}"
     continue
   fi
 
   if [[ "$arg" == /tmp/pcf-tmp* ]]; then
     TEMP_HOST="$arg"
     filename="${arg##*/}"
-    mkdir -p "${HOST_WORKSPACE}/.vscode/php-cs-fixer-tmp"
-    cp "$TEMP_HOST" "${HOST_WORKSPACE}/.vscode/php-cs-fixer-tmp/${filename}"
-    args+=("${CONTAINER_WORKSPACE}/.vscode/php-cs-fixer-tmp/${filename}")
     continue
   fi
 
   args+=("$arg")
 done
+
+docker container exec "$CONTAINER" mkdir -p "$CONTAINER_TMP"
+
+if [[ -n "$HOST_CONFIG" ]]; then
+  docker cp "$HOST_CONFIG" "${CONTAINER}:${CONTAINER_TMP}/.php-cs-fixer.php"
+  args+=("--config=${CONTAINER_TMP}/.php-cs-fixer.php")
+fi
+
+if [[ -n "$TEMP_HOST" ]]; then
+  docker cp "$TEMP_HOST" "${CONTAINER}:${CONTAINER_TMP}/${filename}"
+  args+=("${CONTAINER_TMP}/${filename}")
+fi
 
 docker container exec -i \
   "$CONTAINER" \
@@ -39,7 +54,5 @@ docker container exec -i \
   "${args[@]}"
 
 if [[ -n "$TEMP_HOST" ]]; then
-  cp \
-    "${HOST_WORKSPACE}/.vscode/php-cs-fixer-tmp/${filename}" \
-    "$TEMP_HOST"
+  docker cp "${CONTAINER}:${CONTAINER_TMP}/${filename}" "$TEMP_HOST"
 fi
