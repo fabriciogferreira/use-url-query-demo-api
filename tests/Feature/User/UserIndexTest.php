@@ -63,6 +63,32 @@ describe('Validation', function () {
     Mail::assertNothingSent();
     Queue::assertNothingPushed();
   });
+
+  it('rejects a non-array fields query', function () {
+    Mail::fake();
+    Queue::fake();
+
+    $this->getJson('/api/users?fields=id,name')
+      ->assertStatus(SymfonyResponse::HTTP_UNPROCESSABLE_ENTITY)
+      ->assertJsonValidationErrors(['fields']);
+
+    Mail::assertNothingSent();
+    Queue::assertNothingPushed();
+  });
+
+  it('rejects a non-string fields.users', function () {
+    Mail::fake();
+    Queue::fake();
+
+    $this->getJson('/api/users?'.http_build_query([
+      'fields' => ['users' => ['id', 'name']],
+    ]))
+      ->assertStatus(SymfonyResponse::HTTP_UNPROCESSABLE_ENTITY)
+      ->assertJsonValidationErrors(['fields.users']);
+
+    Mail::assertNothingSent();
+    Queue::assertNothingPushed();
+  });
 });
 
 describe('Behavior', function () {
@@ -86,6 +112,21 @@ describe('Behavior', function () {
     User::factory()->named('Alice Johnson')->create();
 
     $this->getJson('/api/users?sort=email')
+      ->assertStatus(SymfonyResponse::HTTP_BAD_REQUEST);
+
+    Mail::assertNothingSent();
+    Queue::assertNothingPushed();
+  });
+
+  it('rejects fields that are not allowed', function () {
+    Mail::fake();
+    Queue::fake();
+
+    User::factory()->named('Alice Johnson')->create();
+
+    $this->getJson('/api/users?'.http_build_query([
+      'fields' => ['users' => 'email'],
+    ]))
       ->assertStatus(SymfonyResponse::HTTP_BAD_REQUEST);
 
     Mail::assertNothingSent();
@@ -185,6 +226,31 @@ describe('Response', function () {
     $names = array_column($data, 'name');
 
     expect($names)->toBe(['Bob Smith', 'Alice Johnson']);
+
+    Mail::assertNothingSent();
+    Queue::assertNothingPushed();
+  });
+
+  it('selects only allowed user fields', function () {
+    Mail::fake();
+    Queue::fake();
+
+    User::factory()->named('Alice Johnson')->create([
+      'email' => 'alice@example.com',
+    ]);
+
+    $response = $this->getJson('/api/users?'.http_build_query([
+      'fields' => ['users' => 'id,name'],
+    ]))
+      ->assertStatus(SymfonyResponse::HTTP_OK)
+      ->assertJsonCount(1, 'data')
+      ->assertJsonPath('data.0.name', 'Alice Johnson');
+
+    /** @var array<string, mixed> $user */
+    $user = $response->json('data.0');
+
+    expect(array_keys($user))->toEqualCanonicalizing(['id', 'name']);
+    expect($user)->not->toHaveKey('email');
 
     Mail::assertNothingSent();
     Queue::assertNothingPushed();

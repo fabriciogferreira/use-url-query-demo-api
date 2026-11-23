@@ -53,10 +53,10 @@ test('User casts status password and email verified at', function () {
     'email_verified_at' => '2024-06-15 12:00:00',
   ]);
 
-  expect($user->status)->toBe(UserStatusEnum::ACTIVE)
-    ->and(Hash::check('secret', $user->password))->toBeTrue()
-    ->and($user->email_verified_at)->toBeInstanceOf(Carbon::class)
-    ->and($user->email_verified_at?->toDateTimeString())->toBe('2024-06-15 12:00:00');
+  expect($user->status)->toBe(UserStatusEnum::ACTIVE);
+  expect(Hash::check('secret', $user->password))->toBeTrue();
+  expect($user->email_verified_at)->toBeInstanceOf(Carbon::class);
+  expect($user->email_verified_at?->toDateTimeString())->toBe('2024-06-15 12:00:00');
 });
 
 test('User factory defaults to active and inactive state works', function () {
