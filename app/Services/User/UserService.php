@@ -21,6 +21,7 @@ class UserService {
       )
       ->allowedSorts('name')
       ->allowedFields('id', 'name')
+      ->allowedIncludes('posts', 'permissions')
       ->get();
 
     return $users;

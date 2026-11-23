@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Models\Permission;
+use App\Models\Post;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -89,6 +91,20 @@ describe('Validation', function () {
     Mail::assertNothingSent();
     Queue::assertNothingPushed();
   });
+
+  it('rejects a non-string include', function () {
+    Mail::fake();
+    Queue::fake();
+
+    $this->getJson('/api/users?'.http_build_query([
+      'include' => ['posts'],
+    ]))
+      ->assertStatus(SymfonyResponse::HTTP_UNPROCESSABLE_ENTITY)
+      ->assertJsonValidationErrors(['include']);
+
+    Mail::assertNothingSent();
+    Queue::assertNothingPushed();
+  });
 });
 
 describe('Behavior', function () {
@@ -127,6 +143,19 @@ describe('Behavior', function () {
     $this->getJson('/api/users?'.http_build_query([
       'fields' => ['users' => 'email'],
     ]))
+      ->assertStatus(SymfonyResponse::HTTP_BAD_REQUEST);
+
+    Mail::assertNothingSent();
+    Queue::assertNothingPushed();
+  });
+
+  it('rejects includes that are not allowed', function () {
+    Mail::fake();
+    Queue::fake();
+
+    User::factory()->named('Alice Johnson')->create();
+
+    $this->getJson('/api/users?include=unknown')
       ->assertStatus(SymfonyResponse::HTTP_BAD_REQUEST);
 
     Mail::assertNothingSent();
@@ -251,6 +280,68 @@ describe('Response', function () {
 
     expect(array_keys($user))->toEqualCanonicalizing(['id', 'name']);
     expect($user)->not->toHaveKey('email');
+
+    Mail::assertNothingSent();
+    Queue::assertNothingPushed();
+  });
+
+  it('does not load relations without include', function () {
+    Mail::fake();
+    Queue::fake();
+
+    $user = User::factory()->named('Alice Johnson')->create([
+      'email' => 'alice@example.com',
+    ]);
+    Post::factory()->for($user)->create(['title' => 'Hello']);
+
+    $response = $this->getJson('/api/users')
+      ->assertStatus(SymfonyResponse::HTTP_OK)
+      ->assertJsonCount(1, 'data');
+
+    /** @var array<string, mixed> $payload */
+    $payload = $response->json('data.0');
+
+    expect($payload)->not->toHaveKey('posts');
+    expect($payload)->not->toHaveKey('permissions');
+
+    Mail::assertNothingSent();
+    Queue::assertNothingPushed();
+  });
+
+  it('includes posts when requested', function () {
+    Mail::fake();
+    Queue::fake();
+
+    $user = User::factory()->named('Alice Johnson')->create([
+      'email' => 'alice@example.com',
+    ]);
+    Post::factory()->for($user)->create(['title' => 'Hello']);
+
+    $response = $this->getJson('/api/users?include=posts')
+      ->assertStatus(SymfonyResponse::HTTP_OK)
+      ->assertJsonCount(1, 'data')
+      ->assertJsonPath('data.0.posts.0.title', 'Hello');
+
+    Mail::assertNothingSent();
+    Queue::assertNothingPushed();
+  });
+
+  it('includes posts and permissions when both are requested', function () {
+    Mail::fake();
+    Queue::fake();
+
+    $user = User::factory()->named('Alice Johnson')->create([
+      'email' => 'alice@example.com',
+    ]);
+    Post::factory()->for($user)->create(['title' => 'Hello']);
+    $permission = Permission::factory()->create(['name' => 'edit articles']);
+    $user->permissions()->attach($permission);
+
+    $response = $this->getJson('/api/users?include=posts,permissions')
+      ->assertStatus(SymfonyResponse::HTTP_OK)
+      ->assertJsonCount(1, 'data')
+      ->assertJsonPath('data.0.posts.0.title', 'Hello')
+      ->assertJsonPath('data.0.permissions.0.name', 'edit articles');
 
     Mail::assertNothingSent();
     Queue::assertNothingPushed();

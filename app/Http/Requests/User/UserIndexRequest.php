@@ -12,6 +12,7 @@ class UserIndexRequest extends BaseRequest {
       'sort'         => ['sometimes', 'string'],
       'fields'       => ['sometimes', 'array'],
       'fields.users' => ['sometimes', 'string'],
+      'include'      => ['sometimes', 'string'],
     ];
   }
 }
