@@ -9,6 +9,7 @@ class UserIndexRequest extends BaseRequest {
     return [
       'filter'      => ['sometimes', 'array'],
       'filter.name' => ['sometimes', 'string'],
+      'sort'        => ['sometimes', 'string'],
     ];
   }
 }

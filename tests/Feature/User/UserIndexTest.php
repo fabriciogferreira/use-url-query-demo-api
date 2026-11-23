@@ -49,6 +49,20 @@ describe('Validation', function () {
     Mail::assertNothingSent();
     Queue::assertNothingPushed();
   });
+
+  it('rejects a non-string sort', function () {
+    Mail::fake();
+    Queue::fake();
+
+    $this->getJson('/api/users?'.http_build_query([
+      'sort' => ['name'],
+    ]))
+      ->assertStatus(SymfonyResponse::HTTP_UNPROCESSABLE_ENTITY)
+      ->assertJsonValidationErrors(['sort']);
+
+    Mail::assertNothingSent();
+    Queue::assertNothingPushed();
+  });
 });
 
 describe('Behavior', function () {
@@ -59,6 +73,19 @@ describe('Behavior', function () {
     User::factory()->named('Alice Johnson')->create();
 
     $this->getJson('/api/users?filter[email]=alice@example.com')
+      ->assertStatus(SymfonyResponse::HTTP_BAD_REQUEST);
+
+    Mail::assertNothingSent();
+    Queue::assertNothingPushed();
+  });
+
+  it('rejects sorts that are not allowed', function () {
+    Mail::fake();
+    Queue::fake();
+
+    User::factory()->named('Alice Johnson')->create();
+
+    $this->getJson('/api/users?sort=email')
       ->assertStatus(SymfonyResponse::HTTP_BAD_REQUEST);
 
     Mail::assertNothingSent();
@@ -82,7 +109,9 @@ describe('Behavior', function () {
     $response = $this->getJson('/api/users?filter[name]=Alice%20Johnson')
       ->assertStatus(SymfonyResponse::HTTP_OK);
 
-    $names = collect($response->json('data'))->pluck('name')->all();
+    /** @var list<array{name: string}> $data */
+    $data = $response->json('data');
+    $names = array_column($data, 'name');
 
     expect($names)->toBe(['Alice Johnson']);
 
@@ -108,6 +137,54 @@ describe('Response', function () {
       ->assertJsonCount(2, 'data')
       ->assertJsonPath('data.0.name', 'Alice Johnson')
       ->assertJsonPath('data.1.name', 'Bob Smith');
+
+    Mail::assertNothingSent();
+    Queue::assertNothingPushed();
+  });
+
+  it('sorts users by name ascending', function () {
+    Mail::fake();
+    Queue::fake();
+
+    User::factory()->named('Bob Smith')->create([
+      'email' => 'bob@example.com',
+    ]);
+    User::factory()->named('Alice Johnson')->create([
+      'email' => 'alice@example.com',
+    ]);
+
+    $response = $this->getJson('/api/users?sort=name')
+      ->assertStatus(SymfonyResponse::HTTP_OK);
+
+    /** @var list<array{name: string}> $data */
+    $data = $response->json('data');
+    $names = array_column($data, 'name');
+
+    expect($names)->toBe(['Alice Johnson', 'Bob Smith']);
+
+    Mail::assertNothingSent();
+    Queue::assertNothingPushed();
+  });
+
+  it('sorts users by name descending', function () {
+    Mail::fake();
+    Queue::fake();
+
+    User::factory()->named('Alice Johnson')->create([
+      'email' => 'alice@example.com',
+    ]);
+    User::factory()->named('Bob Smith')->create([
+      'email' => 'bob@example.com',
+    ]);
+
+    $response = $this->getJson('/api/users?sort=-name')
+      ->assertStatus(SymfonyResponse::HTTP_OK);
+
+    /** @var list<array{name: string}> $data */
+    $data = $response->json('data');
+    $names = array_column($data, 'name');
+
+    expect($names)->toBe(['Bob Smith', 'Alice Johnson']);
 
     Mail::assertNothingSent();
     Queue::assertNothingPushed();

@@ -19,6 +19,7 @@ class UserService {
       ->allowedFilters(
         AllowedFilter::operator('name', FilterOperator::EQUAL),
       )
+      ->allowedSorts('name')
       ->get();
 
     return $users;

@@ -34,6 +34,15 @@ class UserFactory extends Factory {
   }
 
   /**
+   * Set a fixed display name for the user.
+   */
+  public function named(string $name): static {
+    return $this->state(fn (array $attributes) => [
+      'name' => $name,
+    ]);
+  }
+
+  /**
    * Indicate that the model's email address should be unverified.
    */
   public function unverified(): static {
